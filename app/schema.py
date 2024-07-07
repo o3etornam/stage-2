@@ -1,11 +1,13 @@
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, Field
+
 
 class UserCreate(BaseModel):
     firstName: str
     lastName: str
     email: EmailStr
     password: str
-    phone: str
+    phone: str | None = Field(pattern=r"^\+?\d{9,15}$")
+
 
 class User(BaseModel):
     userId: str
@@ -14,16 +16,49 @@ class User(BaseModel):
     email: EmailStr
     phone: str
 
-class UserPublic(BaseModel):
-    status: str = 'success'
-    message: str = 'Registration Successful'
-    data: "Token"
+
+class UserLogin(BaseModel):
+    email: EmailStr
+    password: str
+
+
+class Data(BaseModel):
+    accessToken: str
     user: User
 
-class Organization(BaseModel):
-    orgId: str
+
+class UserPublic(BaseModel):
+    status: str = "success"
+    message: str
+    data: Data
+
+
+class AddUser(BaseModel):
+    userId: int
+
+
+class OrganisationCreate(BaseModel):
     name: str
-    description: str
+    description: str | None
+
+    class Config:
+        from_attributes = True
+
+
+class Organisation(OrganisationCreate):
+    orgId: str
+
+
+class OrganisationPublic(BaseModel):
+    status: str = "success"
+    message: str = "<message>"
+    data: Organisation
+
 
 class Token(BaseModel):
     accessToken: str
+
+
+class TokenData(BaseModel):
+    access_token: str
+    token_type: str = "Bearer"
