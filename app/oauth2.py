@@ -50,7 +50,6 @@ def get_current_user(
         detail="could not validate credentials",
         headers={"WWW-Authenticate": "Bearer"},
     )
-    print(token)
     user_id = verify_access_token(token, credentials_exception)
     user = db.query(models.Users).filter(models.Users.userId == int(user_id)).first()
     return user
