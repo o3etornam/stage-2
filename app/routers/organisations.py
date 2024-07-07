@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException, Depends
+from fastapi import APIRouter, HTTPException, Depends, status
 from sqlalchemy.orm import Session
 from ..database import get_db
 from .. import models
@@ -20,7 +20,14 @@ async def get_organizations(
         .all()
     )
     if organisations:
-        organisations = [org.organisation for org in organisations]
+        organisations = [
+            (
+                setattr(org.organisation, "orgId", str(org.organisation.orgId)),
+                org.organisation,
+            )[1]
+            for org in organisations
+        ]
+
         return {
             "status": "success",
             "message": "<message>",
@@ -36,25 +43,36 @@ async def get_organization(
     db: Session = Depends(get_db),
     current_user: schema.User = Depends(oauth2.get_current_user),
 ):
-    organisation = (
-        db.query(models.Members)
-        .filter(
-            models.Members.userId == current_user.userId, models.Members.orgId == id
+    if db.query(models.Users).filter(models.Users.userId == id):
+        organisation = (
+            db.query(models.Members)
+            .filter(
+                models.Members.userId == current_user.userId, models.Members.orgId == id
+            )
+            .first()
         )
-        .first()
-    )
-    if organisation:
-        return {
-            "status": "success",
-            "message": "<message>",
-            "data": organisation.organisation,
-        }
+        if organisation:
+            result = organisation.organisation
+            setattr(result, "orgId", str(result.orgId))
+            return {
+                "status": "success",
+                "message": "<message>",
+                "data": organisation.organisation,
+            }
 
+        raise HTTPException(
+            status_code=403,
+            detail={
+                "status": "forbidden",
+                "message": f"Can't access credentials of user with id {id}",
+                "statusCode": 403,
+            },
+        )
     raise HTTPException(
-        status_code=404,
+        status_code=status.HTTP_404_NOT_FOUND,
         detail={
-            "status": "Bad request",
-            "message": f"Organization with {id} not found",
+            "status": "not found",
+            "message": f"User with id {id} not found",
             "statusCode": 404,
         },
     )
@@ -80,7 +98,7 @@ async def create_organization(
         return schema.OrganisationPublic(data=new_organisation)
     except Exception:
         raise HTTPException(
-            status_code=400,
+            status_code=status.HTTP_400_BAD_REQUEST,
             detail={
                 "status": "Bad Request",
                 "message": "Client error",
@@ -105,7 +123,9 @@ async def add_user(
     )
     if organisation:
         new_org_member = (
-            db.query(models.Users).filter(models.Users.userId == user.userId).first()
+            db.query(models.Users)
+            .filter(models.Users.userId == int(user.userId))
+            .first()
         )
         if new_org_member:
             if (
@@ -116,7 +136,7 @@ async def add_user(
                 )
                 .first()
             ):
-                raise HTTPException(status_code=409, detail="user is already a member")
+                raise HTTPException(status_code=409, detail="User is already a member")
             else:
                 new_member = models.Members(orgId=orgId, userId=new_org_member.userId)
                 db.add(new_member)

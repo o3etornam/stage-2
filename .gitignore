@@ -3,3 +3,4 @@
 .env
 SQLite-helper.sql
 app.db
+fly.toml

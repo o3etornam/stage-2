@@ -1,3 +1,4 @@
+from typing import Optional
 from pydantic import BaseModel, EmailStr, Field
 
 
@@ -6,7 +7,7 @@ class UserCreate(BaseModel):
     lastName: str
     email: EmailStr
     password: str
-    phone: str | None = Field(pattern=r"^\+?\d{9,15}$")
+    phone: Optional[str] = Field(None, pattern=r"^\+?\d{9,15}$")
 
 
 class User(BaseModel):
@@ -39,7 +40,7 @@ class AddUser(BaseModel):
 
 class OrganisationCreate(BaseModel):
     name: str
-    description: str | None
+    description: Optional[str]
 
     class Config:
         from_attributes = True
