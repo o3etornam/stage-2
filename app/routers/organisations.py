@@ -32,7 +32,9 @@ async def get_organizations(
         return {
             "status": "success",
             "message": "<message>",
-            "organisations": results,
+            "data": {
+                "organisations": results,
+            },
         }
 
     raise HTTPException(status_code=404, detail="User with id doesn't exsit")
