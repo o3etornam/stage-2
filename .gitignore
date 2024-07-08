@@ -4,3 +4,4 @@
 SQLite-helper.sql
 app.db
 fly.toml
+.pytest_cache/
