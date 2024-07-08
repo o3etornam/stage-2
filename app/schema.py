@@ -46,8 +46,13 @@ class OrganisationCreate(BaseModel):
         from_attributes = True
 
 
-class Organisation(OrganisationCreate):
+class Organisation(BaseModel):
     orgId: str
+    name: str
+    description: Optional[str]
+
+    class Config:
+        from_attributes = True
 
 
 class OrganisationPublic(BaseModel):

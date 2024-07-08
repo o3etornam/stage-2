@@ -20,18 +20,19 @@ async def get_organizations(
         .all()
     )
     if organisations:
-        organisations = [
-            (
-                setattr(org.organisation, "orgId", str(org.organisation.orgId)),
-                org.organisation,
-            )[1]
-            for org in organisations
-        ]
+        results = []
+        for org in organisations:
+            org = org.organisation
+            results.append(
+                schema.Organisation(
+                    orgId=str(org.orgId), name=org.name, description=org.description
+                )
+            )
 
         return {
             "status": "success",
             "message": "<message>",
-            "organisations": organisations,
+            "organisations": results,
         }
 
     raise HTTPException(status_code=404, detail="User with id doesn't exsit")
@@ -57,7 +58,9 @@ async def get_organization(
             return {
                 "status": "success",
                 "message": "<message>",
-                "data": organisation.organisation,
+                "data": schema.Organisation(
+                    orgId=result.orgId, name=result.name, description=result.description
+                ),
             }
 
         raise HTTPException(
